@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .env
 .idea/
+
+# Rebuildable local company-context database, reports and profile exports
+data/processed/
