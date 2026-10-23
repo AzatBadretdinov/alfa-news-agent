@@ -11,6 +11,308 @@
     }
   ],
   "paths": {
+    "/v1/learning/feedback": {
+      "post": {
+        "operationId": "FeedbackData_post__v1_learning_feedback",
+        "tags": [
+          "role-5"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Validated result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackDataResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "LearningToken": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/learning/status": {
+      "get": {
+        "operationId": "LearningStatusData_get__v1_learning_status",
+        "tags": [
+          "role-5"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Validated result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningStatusDataResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "LearningToken": []
+          }
+        ]
+      }
+    },
     "/v1/health": {
       "get": {
         "operationId": "HealthData_get__v1_health",
@@ -2801,6 +3103,10 @@
           },
           "is_mock": {
             "type": "boolean"
+          },
+          "split_group_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
           }
         },
         "required": [
@@ -2995,6 +3301,14 @@
           },
           "truncated": {
             "type": "boolean"
+          },
+          "feedback_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+          },
+          "model_version": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -3003,6 +3317,139 @@
           "items",
           "excluded_future_news_ids",
           "truncated"
+        ]
+      },
+      "FeedbackRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ranking_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+          },
+          "company_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+          },
+          "ratings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "event_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+                },
+                "policy_group_id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+                },
+                "label": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "source_reviewed": {
+                  "const": true
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 2000
+                }
+              },
+              "required": [
+                "event_id",
+                "policy_group_id",
+                "label",
+                "source_reviewed",
+                "reason"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "ranking_id",
+          "company_id",
+          "ratings"
+        ]
+      },
+      "FeedbackData": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "duplicates": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "accepted",
+          "duplicates"
+        ]
+      },
+      "LearningStatusData": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "active_version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "paused": {
+            "type": "boolean"
+          },
+          "labels": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "train": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "validation": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "gate": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "train",
+              "validation",
+              "gate"
+            ]
+          },
+          "consumed_gate_groups": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "last_run": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "thresholds": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "active_version",
+          "paused",
+          "labels",
+          "consumed_gate_groups",
+          "last_run",
+          "thresholds"
         ]
       },
       "SearchRequest": {
@@ -3677,6 +4124,45 @@
           "meta",
           "data"
         ]
+      },
+      "FeedbackDataResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "data": {
+            "$ref": "#/components/schemas/FeedbackData"
+          }
+        },
+        "required": [
+          "meta",
+          "data"
+        ]
+      },
+      "LearningStatusDataResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "data": {
+            "$ref": "#/components/schemas/LearningStatusData"
+          }
+        },
+        "required": [
+          "meta",
+          "data"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "LearningToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Learning-Token"
       }
     }
   }

@@ -6,11 +6,11 @@ export class ContractClient {
     const url = new URL(base);
     if (!["http:", "https:"].includes(url.protocol)) throw new Error("Service URL must be HTTP(S)");
   }
-  async call(path: string, responseSchema: string, requestId: string, body?: unknown): Promise<Envelope> {
+  async call(path: string, responseSchema: string, requestId: string, body?: unknown, headers: Record<string, string> = {}): Promise<Envelope> {
     try {
       const response = await this.request(this.base.replace(/\/$/, "") + path, {
         method: body === undefined ? "GET" : "POST", redirect: "error", signal: AbortSignal.timeout(this.timeoutMs),
-        headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
+        headers: { ...headers, "Content-Type": "application/json", "X-Request-ID": requestId },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
       const reader = response.body?.getReader();

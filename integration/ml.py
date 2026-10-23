@@ -1,8 +1,10 @@
 """Adapters for ContextStore and the checked, optional news_analysis checkout."""
 import importlib
+import json
 import os
 import sys
 from datetime import datetime
+from uuid import uuid4
 from pathlib import Path
 from company_context import ContextStore, build_database
 from .contracts import ROOT
@@ -35,22 +37,38 @@ class RankAdapter:
     def __init__(self):
         self.mode = os.environ.get("RANK_MODE", "mock")
         self.analyze = None
+        self.model = None
+        self.learning = None
+        model_path = os.environ.get("RANK_MODEL_PATH")
+        if model_path and self.mode != "news-analysis":
+            raise ValueError("RANK_MODEL_PATH requires RANK_MODE=news-analysis")
         if self.mode == "news-analysis":
             path = Path(os.environ.get("NEWS_MODULE_PATH", ROOT / "var/sources/news-analysis"))
             if not (path / "news_analysis/__init__.py").is_file():
                 raise ValueError("Run python scripts/prepare_news_source.py before RANK_MODE=news-analysis")
             sys.path.insert(0, str(path.resolve()))
-            self.analyze = importlib.import_module("news_analysis").analyze_news
+            module = importlib.import_module("news_analysis")
+            self.analyze = module.analyze_news
+            if model_path:
+                try:
+                    artifact = json.loads(Path(model_path).read_text(encoding="utf-8-sig"))
+                    if not isinstance(artifact, dict) or not isinstance(artifact.get("metadata", {}), dict):
+                        raise ValueError("Expected a model object with metadata")
+                    self.model = module.LogisticRanker.from_dict(artifact)
+                except (OSError, ValueError, KeyError, TypeError) as error:
+                    raise ValueError("Cannot load RANK_MODEL_PATH; check the model file and feature version") from error
         elif self.mode != "mock":
             raise ValueError("RANK_MODE must be mock or news-analysis")
 
-    def rank(self, store, request):
+    def rank(self, store, request, exposure_id=None):
         ids = [event["news_id"] for event in request["events"]]
         if len(ids) != len(set(ids)):
             raise ValueError("Duplicate news_id")
         if self.analyze:
+            model = self.learning.model() if self.learning else self.model
             # Only validated extraction enters the original pipeline. No fabricated scenario parameters.
-            result = self.analyze(store, request["company_id"], request["events"], request["as_of"], limit=request["limit"])
+            result = self.analyze(store, request["company_id"], request["events"], request["as_of"],
+                                  model=model, limit=request["limit"])
             items = []
             for card in result["cards"]:
                 features = card["company_evidence"]["features"]
@@ -61,8 +79,28 @@ class RankAdapter:
                               "score_kind": card["score_kind"], "reasons": reasons or [
                                   {"code": "baseline", "text": "Базовая оценка; прямое влияние не подтверждено", "profile_paths": []}],
                               "warnings": card["self_check"]["warnings"]})
-            return {"company_id": result["company_id"], "as_of": result["as_of"], "items": items,
+            data = {"company_id": result["company_id"], "as_of": result["as_of"], "items": items,
                     "excluded_future_news_ids": result["excluded_future_news_ids"], "truncated": result["truncated"]}
+            if self.learning and exposure_id:
+                events = {event["news_id"]: event for event in request["events"]}
+                from news_analysis.features import FEATURE_VERSION
+                rows = []
+                for card in result["cards"]:
+                    event = events[card["news_id"]]
+                    rows.append({"company_id": request["company_id"], "event_id": card["event_id"],
+                                 "as_of": request["as_of"], "published_at": event["published_at"],
+                                 "features": card["company_evidence"]["features"]["values"],
+                                 "feature_version": FEATURE_VERSION, "is_mock": event["is_mock"],
+                                 "split_group_id": event.get("split_group_id", event["event_id"]),
+                                 "annotation_context": {"event": event,
+                                     "profile_provenance": card["company_evidence"]["profile_provenance"],
+                                     "feature_evidence": card["company_evidence"]["features"]["evidence"]}})
+                    card_warning = "human_feedback_not_independently_audited"
+                    next(item for item in items if item["event_id"] == card["event_id"])["warnings"].append(card_warning)
+                data["feedback_id"] = str(uuid4())
+                data["model_version"] = model.metadata["registry_version"] if model else "baseline"
+                self.learning.capture(data["feedback_id"], request["company_id"], rows, data, data["model_version"])
+            return data
         profile = store.get_company_profile(request["company_id"])
         future, clusters = [], {}
         for event in request["events"]:
