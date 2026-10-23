@@ -1,5 +1,7 @@
 # Архитектура локального прототипа
 
+> Историческое описание Node `/api`. Для текущей Python/Node интеграции `/v1` см. [интеграционный ADR](integration/ARCHITECTURE.md) и [контракты](integration/CONTRACTS.md).
+
 Браузер → Express API → SQLite и модули поиска/анализа. В live-режиме сервер обращается к OpenAI-compatible шлюзу организаторов. Runtime — Node.js 24.13+ (24.x), TypeScript; встроенный `node:sqlite` в используемой версии Node помечен experimental.
 
 ## Серверные модули
