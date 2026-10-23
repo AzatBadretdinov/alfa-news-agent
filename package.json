@@ -16,7 +16,8 @@
     "integration:start": "node dist/integration/index.js",
     "integration:mocks": "node dist/integration/mock-server.js",
     "integration:dev": "npm run build && python scripts/dev.py",
-    "integration:smoke": "npm run build && python scripts/dev.py --smoke"
+    "integration:smoke": "npm run build && python scripts/dev.py --smoke",
+    "llm:evaluate": "node --import tsx scripts/evaluate_llm.ts"
   },
   "dependencies": {
     "ajv": "8.17.1",

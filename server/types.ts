@@ -57,7 +57,7 @@ export class AppError extends Error {
   }
 }
 export class ModelError extends AppError {
-  constructor(message: string) {
-    super(message, 502);
+  constructor(message: string, public code = "MODEL_RESPONSE_INVALID", status = 502) {
+    super(message, status);
   }
 }
