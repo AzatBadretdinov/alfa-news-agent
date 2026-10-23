@@ -1,13 +1,18 @@
 """Python role-1 HTTP boundary. Same JSON Schema as the Node gateway."""
 import logging
+import asyncio
+import hmac
+import os
 import re
+import threading
 from contextlib import asynccontextmanager
 from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse
 from jsonschema import ValidationError
 from company_context import ContextStore
-from .contracts import validate, envelope
+from .contracts import ROOT, validate, envelope
 from .ml import prepare_context, RankAdapter
 
 log = logging.getLogger("integration")
@@ -23,7 +28,36 @@ def create_app():
     async def lifespan(app):
         app.state.database, app.state.context_mode = prepare_context()
         app.state.ranker = RankAdapter()
-        yield
+        app.state.learning = None
+        stop = threading.Event()
+        worker = None
+        if os.environ.get("LEARNING_ENABLED") == "1":
+            if (app.state.ranker.mode != "news-analysis" or app.state.context_mode != "existing"
+                    or os.environ.get("RANK_MODEL_PATH")):
+                raise ValueError("Learning requires news-analysis, existing context and no RANK_MODEL_PATH")
+            if len(os.environ.get("LEARNING_TOKEN", "")) < 32:
+                raise ValueError("LEARNING_TOKEN must contain at least 32 characters")
+            interval = int(os.environ.get("LEARNING_INTERVAL_SECONDS", "60"))
+            if interval < 10:
+                raise ValueError("Learning interval must be at least 10 seconds")
+            from .learning import Learning
+            app.state.learning = Learning(os.environ.get("LEARNING_DB", ROOT / "var/learning/registry.sqlite3"))
+            app.state.ranker.learning = app.state.learning
+            def work():
+                while not stop.is_set():
+                    try:
+                        app.state.learning.run()
+                    except Exception:
+                        log.exception("Learning cycle failed; active model retained")
+                    stop.wait(interval)
+            worker = threading.Thread(target=work, name="ranker-learning", daemon=True)
+            worker.start()
+        try:
+            yield
+        finally:
+            stop.set()
+            if worker:
+                await asyncio.to_thread(worker.join)
 
     app = FastAPI(title="Role 1 integration adapter", lifespan=lifespan, docs_url=None, openapi_url=None)
 
@@ -93,6 +127,33 @@ def create_app():
     def health(request: Request):
         return result(request, "HealthDataResponse", {"status": "ok", "service": "ml"})
 
+    def learning(request):
+        if app.state.learning is None:
+            raise ApiError(404, "NOT_FOUND", "Learning is disabled")
+        supplied = request.headers.get("X-Learning-Token", "")
+        if not hmac.compare_digest(supplied.encode(), os.environ["LEARNING_TOKEN"].encode()):
+            raise ApiError(403, "FORBIDDEN", "Reviewer token required")
+        return app.state.learning
+
+    @app.get("/v1/learning/status")
+    def learning_status(request: Request):
+        return result(request, "LearningStatusDataResponse", learning(request).status(), False)
+
+    @app.post("/v1/learning/feedback")
+    async def feedback(request: Request):
+        controller = learning(request)
+        body = await read(request, "FeedbackRequest")
+        from starlette.concurrency import run_in_threadpool
+        try:
+            data = await run_in_threadpool(controller.feedback, body, os.environ.get("LEARNING_REVIEWER", "local-reviewer"))
+        except ValueError as error:
+            raise ApiError(422, "VALIDATION_ERROR", str(error))
+        return result(request, "FeedbackDataResponse", data, False)
+
+    @app.get("/learning")
+    def learning_page():
+        return FileResponse(ROOT / "integration/learning_ui/index.html")
+
     @app.get("/v1/companies")
     def companies(request: Request):
         try:
@@ -122,7 +183,7 @@ def create_app():
         def compute():
             with ContextStore(app.state.database) as store:
                 store.get_company_profile(body["company_id"])
-                return app.state.ranker.rank(store, body)
+                return app.state.ranker.rank(store, body, request.state.request_id)
         data = await run_in_threadpool(compute)
         return result(request, "RankDataResponse", data,
                       app.state.context_mode == "fixture" or app.state.ranker.mode == "mock")

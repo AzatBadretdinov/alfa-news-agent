@@ -83,6 +83,15 @@ export function createGateway(options: { ml: ContractClient; retrieval: Retrieva
     binding(result.data.items.every((item: Json) => req.body.events.some((event: Json) => event.news_id === item.news_id && event.event_id === item.event_id)), "Rank returned an unknown event");
     send(res, "RankDataResponse", result);
   });
+  app.get("/v1/learning/status", async (req, res) => {
+    send(res, "LearningStatusDataResponse", await options.ml.call("/v1/learning/status", "LearningStatusDataResponse",
+      res.locals.requestId, undefined, { "X-Learning-Token": req.get("X-Learning-Token") ?? "" }));
+  });
+  app.post("/v1/learning/feedback", async (req, res) => {
+    checkBody(req, "FeedbackRequest");
+    send(res, "FeedbackDataResponse", await options.ml.call("/v1/learning/feedback", "FeedbackDataResponse",
+      res.locals.requestId, req.body, { "X-Learning-Token": req.get("X-Learning-Token") ?? "" }));
+  });
   app.post("/v1/tools/search_news", async (req, res) => {
     checkBody(req, "SearchRequest");
     send(res, "SearchDataResponse", await options.retrieval.search(req.body, res.locals.requestId));
@@ -177,6 +186,7 @@ export function createGateway(options: { ml: ContractClient; retrieval: Retrieva
   });
   app.use("/v1", (_req, _res, next) => next(new ApiFault(404, "NOT_FOUND", "Route not found")));
   app.get("/integration", (_req, res) => res.sendFile(resolve(ROOT, "integration/frontend/index.html")));
+  app.get("/learning", (_req, res) => res.sendFile(resolve(ROOT, "integration/learning_ui/index.html")));
   app.get("/integration/client.js", (_req, res) => res.sendFile(resolve(ROOT, "integration/frontend/client.js")));
   if (options.legacy) app.use(options.legacy);
   app.use((_req, _res, next) => next(new ApiFault(404, "NOT_FOUND", "Route not found")));

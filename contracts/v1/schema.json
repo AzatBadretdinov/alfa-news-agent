@@ -958,6 +958,10 @@
         },
         "is_mock": {
           "type": "boolean"
+        },
+        "split_group_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
         }
       },
       "required": [
@@ -1152,6 +1156,14 @@
         },
         "truncated": {
           "type": "boolean"
+        },
+        "feedback_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+        },
+        "model_version": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "required": [
@@ -1160,6 +1172,139 @@
         "items",
         "excluded_future_news_ids",
         "truncated"
+      ]
+    },
+    "FeedbackRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ranking_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+        },
+        "company_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+        },
+        "ratings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "event_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+              },
+              "policy_group_id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+              },
+              "label": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "source_reviewed": {
+                "const": true
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 2000
+              }
+            },
+            "required": [
+              "event_id",
+              "policy_group_id",
+              "label",
+              "source_reviewed",
+              "reason"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "ranking_id",
+        "company_id",
+        "ratings"
+      ]
+    },
+    "FeedbackData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "accepted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "duplicates": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "accepted",
+        "duplicates"
+      ]
+    },
+    "LearningStatusData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "active_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "paused": {
+          "type": "boolean"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "train": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "validation": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "gate": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "train",
+            "validation",
+            "gate"
+          ]
+        },
+        "consumed_gate_groups": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "last_run": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "thresholds": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "active_version",
+        "paused",
+        "labels",
+        "consumed_gate_groups",
+        "last_run",
+        "thresholds"
       ]
     },
     "SearchRequest": {
@@ -1828,6 +1973,38 @@
         },
         "data": {
           "$ref": "#/$defs/HealthData"
+        }
+      },
+      "required": [
+        "meta",
+        "data"
+      ]
+    },
+    "FeedbackDataResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "meta": {
+          "$ref": "#/$defs/Meta"
+        },
+        "data": {
+          "$ref": "#/$defs/FeedbackData"
+        }
+      },
+      "required": [
+        "meta",
+        "data"
+      ]
+    },
+    "LearningStatusDataResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "meta": {
+          "$ref": "#/$defs/Meta"
+        },
+        "data": {
+          "$ref": "#/$defs/LearningStatusData"
         }
       },
       "required": [

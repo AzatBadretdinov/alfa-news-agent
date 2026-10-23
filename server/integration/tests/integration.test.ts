@@ -181,3 +181,33 @@ test("OpenAPI 3.1 can be parsed and resolved without network references", async 
   assert.equal(api.openapi, "3.1.0");
   assert.ok(api.paths["/v1/rank"].post.requestBody.content["application/json"].schema.properties.events);
 });
+
+test("learning gateway forwards only supplied reviewer token and validates feedback", async () => {
+  const seen: string[] = [];
+  const ml = new ContractClient("http://ml.test", 500, (async (_url, init) => {
+    const token = (init!.headers as Record<string, string>)["X-Learning-Token"];
+    seen.push(token);
+    const id = (init!.headers as Record<string, string>)["X-Request-ID"];
+    if (!token) return Response.json({ schema_version: "1.0.0", request_id: id,
+      error: { code: "FORBIDDEN", message: "Reviewer token required", retryable: false } }, { status: 403 });
+    const data = init!.body ? { accepted: 1, duplicates: 0 } : {
+      active_version: "baseline", paused: false, labels: { train: 0, validation: 0, gate: 0 },
+      consumed_gate_groups: 0, last_run: null, thresholds: {} };
+    return Response.json(envelope(data, id, "live"));
+  }) as typeof fetch);
+  const h = await harness({ ml });
+  try {
+    assert.equal((await h.call("/v1/learning/status")).status, 403);
+    const response = await fetch(h.base + "/v1/learning/status", { headers: { ...headers, "X-Learning-Token": "test-reviewer" } });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).data.active_version, "baseline");
+    const feedback = { ranking_id: "ranking-1", company_id: "U_A", ratings: [
+      { event_id: "e1", policy_group_id: "e1", label: 2, reason: "Relevant exposure", source_reviewed: true }] };
+    const saved = await fetch(h.base + "/v1/learning/feedback", { method: "POST",
+      headers: { ...headers, "X-Learning-Token": "test-reviewer" }, body: JSON.stringify(feedback) });
+    assert.equal(saved.status, 200);
+    assert.deepEqual(seen, ["", "test-reviewer", "test-reviewer"]);
+    assert.equal((await h.call("/v1/learning/feedback", { ...feedback, ratings: [{ ...feedback.ratings[0], source_reviewed: false }] })).status, 422);
+    assert.equal((await fetch(h.base + "/learning")).status, 200);
+  } finally { await h.close(); }
+});

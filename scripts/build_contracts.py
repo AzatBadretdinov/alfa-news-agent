@@ -49,6 +49,7 @@ def generate():
                       "countries": STRINGS, "regions": STRINGS, "company_ids": array(ID),
                       "entity_mapping_source": {"type": ["string", "null"]},
                       "sources": array({"allOf": [REF("Evidence"), {"properties": {"kind": {"const": "news"}}}]}, minItems=1), "is_mock": {"type": "boolean"}})
+    d["Event"]["properties"]["split_group_id"] = ID
     d["Event"]["allOf"] = [{"if": {"properties": {"company_ids": {"minItems": 1}}},
                               "then": {"properties": {"entity_mapping_source": STR}}}]
     d["Reason"] = obj({"code": ID, "text": STR, "profile_paths": array({"type": "string", "pattern": "^/"})})
@@ -61,6 +62,16 @@ def generate():
                             "as_of": DATE, "limit": {"type": "integer", "minimum": 1, "maximum": 100}})
     d["RankData"] = obj({"company_id": ID, "as_of": DATE, "items": array(REF("RankedItem")),
                          "excluded_future_news_ids": array(ID), "truncated": {"type": "boolean"}})
+    d["RankData"]["properties"].update({"feedback_id": ID, "model_version": STR})
+    d["FeedbackRequest"] = obj({"ranking_id": ID, "company_id": ID,
+        "ratings": array(obj({"event_id": ID, "policy_group_id": ID,
+            "label": {"type": "integer", "minimum": 0, "maximum": 3}, "source_reviewed": {"const": True},
+            "reason": {"type": "string", "minLength": 3, "maxLength": 2000}}), minItems=1, maxItems=100)})
+    d["FeedbackData"] = obj({"accepted": {"type": "integer", "minimum": 0}, "duplicates": {"type": "integer", "minimum": 0}})
+    d["LearningStatusData"] = obj({"active_version": STR, "paused": {"type": "boolean"},
+        "labels": obj({key: {"type": "integer", "minimum": 0} for key in ("train", "validation", "gate")}),
+        "consumed_gate_groups": {"type": "integer", "minimum": 0},
+        "last_run": {"type": ["object", "null"]}, "thresholds": {"type": "object"}})
     d["SearchRequest"] = obj({"query": {"type": "string", "maxLength": 500}, "as_of": DATE,
                               "limit": {"type": "integer", "minimum": 1, "maximum": 100},
                               "news_id": {"type": ["string", "null"], "pattern": ID["pattern"]}})
@@ -90,9 +101,11 @@ def generate():
     d["CompaniesData"] = obj({"items": array(ID), "offset": {"type": "integer", "minimum": 0},
                               "limit": {"type": "integer", "minimum": 1, "maximum": 100}})
     d["HealthData"] = obj({"status": {"const": "ok"}, "service": STR})
-    for name in ["Profile", "CompaniesData", "RankData", "SearchData", "RagData", "ResolveData", "Analysis", "Answer", "HealthData"]:
+    for name in ["Profile", "CompaniesData", "RankData", "SearchData", "RagData", "ResolveData", "Analysis", "Answer", "HealthData", "FeedbackData", "LearningStatusData"]:
         d[name + "Response"] = obj({"meta": REF("Meta"), "data": REF(name)})
     routes = [
+        ("post", "/v1/learning/feedback", "FeedbackRequest", "FeedbackDataResponse", 5),
+        ("get", "/v1/learning/status", None, "LearningStatusDataResponse", 5),
         ("get", "/v1/health", None, "HealthDataResponse", 5),
         ("get", "/v1/companies", None, "CompaniesDataResponse", 1),
         ("get", "/v1/companies/{company_id}", None, "ProfileResponse", 1),
@@ -122,12 +135,14 @@ def generate():
               "responses": {"200": {"description": "Validated result", "content": {"application/json": {"schema": REF(response)}}},
                             **{str(code): {"description": "Error", "content": {"application/json": {"schema": REF("Error")}}}
                                for code in [400, 403, 404, 409, 413, 415, 422, 429, 500, 502, 503, 504]}}}
+        if path.startswith("/v1/learning/"):
+            op["security"] = [{"LearningToken": []}]
         if request:
             op["requestBody"] = {"required": True, "content": {"application/json": {"schema": REF(request)}}}
         paths.setdefault(path, {})[method] = op
     api = {"openapi": "3.1.0", "info": {"title": "Alfa News integration API", "version": "1.0.0",
             "description": "Local development API. Company selection scopes data, it is not authentication. /v1/agent/analyze is internal."},
-           "servers": [{"url": "http://localhost:8000"}], "paths": paths, "components": {"schemas": copy.deepcopy(d)}}
+           "servers": [{"url": "http://localhost:8000"}], "paths": paths, "components": {"schemas": copy.deepcopy(d), "securitySchemes": {"LearningToken": {"type": "apiKey", "in": "header", "name": "X-Learning-Token"}}}}
     api = json.loads(json.dumps(api).replace("#/$defs/", "#/components/schemas/"))
     return {"schema.json": {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:alfa:integration:v1", "$defs": d},
             "openapi.json": api}

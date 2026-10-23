@@ -3,6 +3,7 @@ import argparse
 import os
 from pathlib import Path
 import signal
+import secrets
 import shutil
 import socket
 import subprocess
@@ -27,7 +28,18 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--native-providers", action="store_true", help="Run roles 2 and 3 as separate HTTP adapter processes")
+    parser.add_argument("--learning", action="store_true", help="Enable human feedback and background ranker training")
+    parser.add_argument("--context-db", help="Existing real company-context database, required for --learning")
     args = parser.parse_args()
+    if args.learning:
+        if not args.context_db or not Path(args.context_db).is_file():
+            raise SystemExit("--learning requires --context-db pointing to an existing company database")
+        if os.environ.get("RANK_MODEL_PATH"):
+            raise SystemExit("Remove RANK_MODEL_PATH: learning owns its versioned model registry")
+        os.environ.update(LEARNING_ENABLED="1", RANK_MODE="news-analysis", NEWS_MODULE_PATH=str(ROOT))
+        os.environ.setdefault("LEARNING_TOKEN", secrets.token_urlsafe(32))
+        if not args.smoke:
+            print("Reviewer token (paste into /learning): " + os.environ["LEARNING_TOKEN"], flush=True)
     if not (ROOT / "dist/integration/index.js").is_file():
         raise SystemExit("Run npm run build first")
     processes, logs = [], []
@@ -46,6 +58,8 @@ def main():
                    "CONTEXT_DB": str(directory / "context.sqlite3"), "DATA_DIR": str(node_fixture(directory / "node-data")),
                    "DB_PATH": str(directory / "node.sqlite3"), "ML_URL": f"http://127.0.0.1:{ml_port}",
                    "RETRIEVAL_URL": f"http://127.0.0.1:{mock_port}", "AGENT_URL": f"http://127.0.0.1:{agent_port if args.native_providers else mock_port}"}
+            if args.learning:
+                env.update(CONTEXT_MODE="existing", CONTEXT_DB=str(Path(args.context_db).resolve()))
             # This runner intentionally uses fixtures/demo. Existing data and live models require explicit service commands.
             commands = [("ml", [sys.executable, "-m", "uvicorn", "integration.app:app", "--host", "127.0.0.1", "--port", str(ml_port)], {}),
                         ("mocks", ["node", "dist/integration/mock-server.js"], {"PORT": str(mock_port)}),
@@ -81,7 +95,7 @@ def main():
             if args.smoke:
                 smoke(base)
             else:
-                print(f"Open {base}/integration | Ctrl+C stops all service processes", flush=True)
+                print(f"Open {base}/{'learning' if args.learning else 'integration'} | Ctrl+C stops all service processes", flush=True)
                 while all(p.poll() is None for p in processes):
                     time.sleep(0.5)
                 raise RuntimeError("A service exited; inspect var/integration/dev/*.log")
