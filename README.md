@@ -2,6 +2,8 @@
 
 Персональная новостная аналитика для компаний: профиль бизнеса → релевантные новости → анализ с источниками → уточняющие вопросы.
 
+> 🧭 Новым читателям и жюри: начните с [карты проекта](docs/INDEX.md) — что где лежит, как запустить проверки и где какой критерий ТЗ закрыт.
+
 В этой ветке объединены `master`, `feature/news-analysis`, `feature/node-prototype` и `role5/integration-foundation`. История и предметные модули сохранены. Состав, проверки и порядок передачи в master: [MERGE_TO_MASTER.md](docs/integration/MERGE_TO_MASTER.md).
 
 ## Запуск без Docker
@@ -45,6 +47,11 @@ python scripts/dev.py --native-providers
 | `contracts/v1/` | JSON Schema 2020-12, OpenAPI 3.1, примеры | [Контракты](docs/integration/CONTRACTS.md) |
 | `data/training_v1/`, `data/training_v2/` | Датасеты, источники, ревью и ограничения AI-разметки | [v1](data/training_v1/README.md), [v2](data/training_v2/README.md) |
 | `tests/`, `server/**/tests/` | Unit-, контрактные и интеграционные проверки | [Проверка объединения](docs/integration/MERGE_TO_MASTER.md) |
+| `data/demo/` | Демо-набор: компании, новости, разметка, привязка к аналитике банка | [Демо-компании](docs/DEMO_COMPANIES.md) |
+| `docs/INDEX.md` | Карта проекта: навигация, проверки, критерии ТЗ | [Карта](docs/INDEX.md) |
+| `docs/ARCHITECTURE_OVERVIEW.md`, `docs/DECISIONS.md` | Единая схема гибрида Python+Node; решения команды | — |
+| `docs/SECURITY.md`, `docs/MONITORING.md`, `docs/SCALABILITY.md` | Безопасность AI, мониторинг качества (№12), масштабирование (№7) | — |
+| `docs/DEMO_SCRIPT.md`, `docs/BASELINE_REPORT.md`, `docs/LABELING_GUIDE.md` | Сценарий защиты, baseline-метрика, инструкция по разметке | — |
 
 Распределение работы пяти ролей: [TEAM.md](docs/integration/TEAM.md). После принятия объединения новые рабочие ветки создавать от обновлённого master. Старые указания на базу `feature/node-prototype` относятся к первоначальному отдельному PR интеграции.
 
