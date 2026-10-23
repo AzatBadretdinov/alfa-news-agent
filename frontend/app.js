@@ -43,6 +43,10 @@ function notice(text, error = false) {
   n.hidden = !text;
 }
 async function api(path, options = {}) {
+  if (window.__V1?.active) {
+    const headers = { ...(state.company ? { "X-Company-ID": state.company.id } : {}), ...options.headers };
+    return window.__V1.handle(path, { ...options, headers });
+  }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), Math.max(100000, state.bootstrap?.request_timeout_ms ?? 100000));
   try {
