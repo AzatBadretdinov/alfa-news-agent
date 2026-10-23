@@ -1,0 +1,91 @@
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+export const MODELS = [
+  "google/gemma-4-26b-a4b-it",
+  "z-ai/glm-5.3-flash",
+  "qwen/qwen3.6-35b-a3b",
+  "deepseek/deepseek-v4.1-flash",
+  "qwen/qwen3-vl-30b-a3b-instruct",
+  "moonshotai/kimi-k2.6",
+];
+export const ROLES = [
+  "Финансовый директор",
+  "Генеральный директор",
+  "Руководитель казначейства",
+];
+export interface Settings {
+  root: string;
+  data: string;
+  dbPath: string;
+  mode: "demo" | "live";
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+  maxCalls: number;
+  maxOutputTokens: number;
+  maxPlanningTokens: number;
+  timeout: number;
+  host: string;
+  port: number;
+  feeds: string[];
+}
+
+function integer(value: string | undefined, fallback: number, min = 0) {
+  const number = Number(value ?? fallback);
+  if (!Number.isSafeInteger(number) || number < min)
+    throw new Error("Неверное целое число в конфигурации");
+  return number;
+}
+
+export function loadSettings(env: NodeJS.ProcessEnv = process.env): Settings {
+  const values: NodeJS.ProcessEnv = { ...env };
+  const path = resolve(ROOT, ".env");
+  if (existsSync(path)) {
+    for (const line of readFileSync(path, "utf8")
+      .replace(/^\uFEFF/, "")
+      .split(/\r?\n/)) {
+      const match = line.trim().match(/^([^#=]+)=(.*)$/);
+      if (match && values[match[1].trim()] === undefined)
+        values[match[1].trim()] = match[2]
+          .trim()
+          .replace(/^(['"])(.*)\1$/, "$2");
+    }
+  }
+  const mode = values.LLM_MODE ?? "demo";
+  const model = values.LLM_MODEL ?? "qwen/qwen3.6-35b-a3b";
+  if (mode !== "demo" && mode !== "live")
+    throw new Error("LLM_MODE должен быть demo или live");
+  if (!MODELS.includes(model))
+    throw new Error("Модель отсутствует в списке разрешённых");
+
+  const feeds: unknown = JSON.parse(values.NEWS_FEEDS_JSON ?? "[]");
+  if (
+    !Array.isArray(feeds) ||
+    !feeds.every(
+      (url) => typeof url === "string" && new URL(url).protocol === "https:",
+    )
+  )
+    throw new Error("NEWS_FEEDS_JSON должен содержать HTTPS-адреса");
+  return {
+    root: ROOT,
+    data: resolve(values.DATA_DIR ?? resolve(ROOT, "data")),
+    // Separate database prevents the new runtime from changing the old prototype's state.
+    dbPath: resolve(values.DB_PATH ?? resolve(ROOT, "var", "app-node.sqlite3")),
+    mode,
+    baseUrl: (
+      values.LLM_BASE_URL ?? "https://changellenge.up.railway.app/v1"
+    ).replace(/\/+$/, ""),
+    apiKey: values.LLM_API_KEY ?? "",
+    model,
+    maxCalls: integer(values.MAX_DAILY_LLM_CALLS, 100),
+    maxOutputTokens: integer(values.LLM_MAX_OUTPUT_TOKENS, 6000, 256),
+    maxPlanningTokens: integer(values.LLM_MAX_PLANNING_TOKENS, 6000, 256),
+    timeout: integer(values.LLM_TIMEOUT_SECONDS, 120, 1) * 1000,
+    host: values.HOST ?? "127.0.0.1",
+    port: integer(values.PORT, 8000),
+    feeds,
+  };
+}
