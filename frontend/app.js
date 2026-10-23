@@ -22,6 +22,20 @@ const url = (s) => {
     return "";
   }
 };
+const CONV_KEY = "alfa-conversations";
+function loadConversations() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CONV_KEY) || "{}");
+    return raw && typeof raw === "object" ? raw : {};
+  } catch {
+    return {};
+  }
+}
+function saveConversations() {
+  try {
+    localStorage.setItem(CONV_KEY, JSON.stringify(state.conversations));
+  } catch {}
+}
 function notice(text, error = false) {
   const n = $("#notice");
   n.textContent = text;
@@ -64,6 +78,7 @@ function showView(view) {
 }
 async function bootstrap() {
   try {
+    state.conversations = loadConversations();
     state.bootstrap = await api("/api/bootstrap");
     const b = state.bootstrap;
     $("#stat-companies").textContent = fmt(b.stats.companies);
@@ -324,6 +339,7 @@ document.addEventListener("submit", async (e) => {
     if (gen !== state.generation || state.analysis?.id !== a.id) return;
     state.conversations[a.id] ??= [];
     state.conversations[a.id].push({ question: q, answer: response.answer });
+    saveConversations();
     const answers = $("#answers");
     if (answers)
       answers.insertAdjacentHTML(
