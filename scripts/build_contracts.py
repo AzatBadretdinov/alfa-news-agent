@@ -85,6 +85,21 @@ def generate():
                                "audience_role": {"enum": ["cfo", "ceo", "treasury"]}})
     d["Claim"] = obj({"kind": {"enum": ["fact", "bank", "ai"]}, "text": STR, "quote": {"type": "string"},
                       "source_ids": array(ID, minItems=1)})
+    d["Error"]["properties"]["error"]["properties"]["code"]["enum"] += [
+        "MODEL_AUTH_ERROR", "MODEL_LIMIT", "MODEL_TIMEOUT", "MODEL_UNAVAILABLE", "MODEL_RESPONSE_INVALID"]
+    d["Claim"]["properties"].update({
+        "profile_paths": array({"type": "string", "pattern": "^/", "maxLength": 500}, minItems=1, maxItems=20, uniqueItems=True),
+        "conditions": array({"type": "string", "minLength": 1, "maxLength": 2000}, minItems=1, maxItems=10)})
+    indexes = array({"type": "integer", "minimum": 0, "maximum": 29}, minItems=1, maxItems=30, uniqueItems=True)
+    lines = lambda count=10: array({"type": "string", "minLength": 1, "maxLength": 4000, "pattern": r"\S"}, maxItems=count)
+    d["Grounding"] = obj({"summary": indexes, "why_relevant": indexes,
+        "risks": array(indexes, maxItems=10), "opportunities": array(indexes, maxItems=10),
+        "recommendations": array(obj({"claim_indexes": indexes,
+            "condition": {"type": "string", "minLength": 1, "maxLength": 2000},
+            "required_data": {**lines(), "minItems": 1}}), maxItems=10)})
+    d["GeneratedAnalysis"] = obj({"summary": {**STR, "maxLength": 6000, "pattern": r"\S"}, "why_relevant": {**STR, "maxLength": 6000, "pattern": r"\S"},
+        "claims": array(REF("Claim"), minItems=2, maxItems=30), "risks": lines(), "opportunities": lines(),
+        "recommendations": lines(), "limitations": lines(20), "missing_data": lines(20), "grounding": REF("Grounding")})
     d["Trace"] = obj({"step": ID, "detail": STR})
     d["Analysis"] = obj({"id": ID, "company_id": ID, "news_id": ID, "created_at": DATE,
                          "summary": STR, "why_relevant": STR, "claims": array(REF("Claim"), minItems=1),
@@ -94,14 +109,26 @@ def generate():
     d["AgentRequest"] = obj({"company_id": ID, "profile": REF("Profile"), "event": REF("Event"),
                              "ranked_item": REF("RankedItem"), "research": REF("RagData"), "as_of": DATE,
                              "audience_role": {"enum": ["cfo", "ceo", "treasury"]}, "is_mock": {"type": "boolean"}})
+    d["Analysis"]["properties"].update({"missing_data": lines(20), "grounding": REF("Grounding")})
+    d["Analysis"]["allOf"] = [{"if": {"properties": {"mode": {"const": "live"}}},
+                                  "then": {"required": ["grounding", "missing_data"]}}]
+    d["AnalysisEventRequest"] = obj({"company_id": ID, "event": REF("Event"), "as_of": DATE,
+        "audience_role": {"enum": ["cfo", "ceo", "treasury"]}})
+    d["AnalysisEventRequest"]["properties"]["expected_context_sha256"] = {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+    d["PreparedContextData"] = obj({"input": REF("AgentRequest"), "sources": array(REF("Evidence"), minItems=2),
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "serialized_bytes": {"type": "integer", "minimum": 1}})
     d["QuestionRequest"] = obj({"company_id": ID, "question": {"type": "string", "minLength": 3, "maxLength": 2000}})
     d["AgentQuestionRequest"] = obj({"company_id": ID, "question": {"type": "string", "minLength": 3, "maxLength": 2000},
                                      "analysis": REF("Analysis"), "history": array(obj({"question": STR, "answer": STR}), maxItems=10)})
+    d["AgentQuestionRequest"]["properties"].update({"as_of": DATE, "audience_role": {"enum": ["cfo", "ceo", "treasury"]}})
     d["Answer"] = obj({"analysis_id": ID, "company_id": ID, "answer": STR, "source_ids": array(ID, minItems=1)})
+    d["GeneratedAnswer"] = obj({"answer": {**STR, "maxLength": 8000, "pattern": r"\S"}, "claims": array(REF("Claim"), minItems=2, maxItems=30),
+        "claim_indexes": indexes, "limitations": lines(20), "missing_data": lines(20)})
+    d["Answer"]["properties"].update({key: value for key, value in d["GeneratedAnswer"]["properties"].items() if key != "answer"})
     d["CompaniesData"] = obj({"items": array(ID), "offset": {"type": "integer", "minimum": 0},
                               "limit": {"type": "integer", "minimum": 1, "maximum": 100}})
     d["HealthData"] = obj({"status": {"const": "ok"}, "service": STR})
-    for name in ["Profile", "CompaniesData", "RankData", "SearchData", "RagData", "ResolveData", "Analysis", "Answer", "HealthData", "FeedbackData", "LearningStatusData"]:
+    for name in ["Profile", "CompaniesData", "RankData", "SearchData", "RagData", "ResolveData", "Analysis", "Answer", "HealthData", "FeedbackData", "LearningStatusData", "PreparedContextData"]:
         d[name + "Response"] = obj({"meta": REF("Meta"), "data": REF(name)})
     routes = [
         ("post", "/v1/learning/feedback", "FeedbackRequest", "FeedbackDataResponse", 5),
@@ -114,6 +141,8 @@ def generate():
         ("post", "/v1/tools/rag_bank_analytics", "RagRequest", "RagDataResponse", 3),
         ("post", "/v1/tools/resolve_sources", "ResolveRequest", "ResolveDataResponse", 3),
         ("post", "/v1/analyze", "AnalyzeRequest", "AnalysisResponse", 2),
+        ("post", "/v1/analysis-context", "AnalysisEventRequest", "PreparedContextDataResponse", 5),
+        ("post", "/v1/analyze-event", "AnalysisEventRequest", "AnalysisResponse", 2),
         ("post", "/v1/agent/analyze", "AgentRequest", "AnalysisResponse", 2),
         ("post", "/v1/agent/questions", "AgentQuestionRequest", "AnswerResponse", 2),
         ("get", "/v1/analyses/{analysis_id}", None, "AnalysisResponse", 2),

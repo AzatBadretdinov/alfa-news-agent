@@ -13,6 +13,7 @@ COPY --from=build /app/dist dist/
 COPY package.json ./
 COPY frontend/ frontend/
 COPY integration/frontend/ integration/frontend/
+COPY integration/analysis_ui/ integration/analysis_ui/
 COPY integration/learning_ui/ integration/learning_ui/
 COPY integration/fixtures/ integration/fixtures/
 COPY contracts/ contracts/

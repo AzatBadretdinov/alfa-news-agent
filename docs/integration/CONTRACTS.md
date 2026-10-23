@@ -82,11 +82,15 @@
 
 `AnalyzeRequest`: `company_id`, `news_id`, `as_of`, `audience_role` (`cfo/ceo/treasury`). Командные роли 1–5 не связаны с этими тремя аудиториями пользователя.
 
-`AgentRequest` дополнительно содержит полный `profile`, нормализованный `event`, `ranked_item`, `research` и `is_mock`. Агент может планировать дальнейшие вызовы инструментов роли 3; новые источники результата проверяются шлюзом через `resolve_sources`. Идентификаторы и тексты источников нельзя генерировать самостоятельно.
+`AgentRequest` дополнительно содержит полный `profile`, нормализованный `event`, `ranked_item`, `research` и `is_mock`. Подготовленная live-генерация использует только переданные источники. Автономный legacy-агент сохранён отдельно; для совместимых demo/mock-поставщиков дополнительные источники проверяются шлюзом через `resolve_sources`. Идентификаторы и тексты источников нельзя генерировать самостоятельно.
+
+`AnalysisEventRequest` = `{company_id,event,as_of,audience_role,expected_context_sha256?}`. `/v1/analysis-context` собирает профиль, ранг и RAG без генерации, возвращает `{input,sources,sha256,serialized_bytes}`. `/v1/analyze-event` анализирует переданное событие; несовпадение просмотренного хэша даёт 409 до модели. `/v1/analyze` по news_id сохранён. Профиль и ранжирование из браузера не принимаются.
 
 `Analysis` содержит ID/компанию/новость/дату, `summary`, `why_relevant`, `claims`, `risks`, `opportunities`, `recommendations`, `limitations`, `sources`, `trace`, `mode`. Claim = `{kind,text,quote,source_ids}`. `fact` требует news-source; `ai` — company и news; `bank` — дословную quote, найденную в bank-excerpt, и `text=quote`. Проверка структуры и ссылок не доказывает семантическую истинность claim.
 
 Для вопросов gateway передаёт агенту `analysis`, `company_id`, `question`, последние ≤10 пар `history`. `Answer` содержит `analysis_id`, `company_id`, `answer`, `source_ids` только из этого анализа. Для новых событий/источников нужно создать новый анализ. История между компаниями не переносится.
+
+Для `Analysis.mode=live` обязательны `missing_data` и `grounding`; ai-claims требуют конкретных `profile_paths` и `conditions`, факт — точной news-цитаты. Live-вопросы дополнены `claims`, `claim_indexes`, `limitations`, `missing_data` и проходят повторную проверку gateway. Полная схема, ограничения и `MODEL_*` коды ошибок: [LLM_GROUNDING.md](LLM_GROUNDING.md). Mock/demo сохраняют прежние обязательные поля. Усиление live-контракта требует одновременного обновления внешней реализации роли 2.
 
 SDK роли 4: `integration/frontend/client.js`. При смене компании нужно отменить активные запросы через AbortController, очистить выбранный анализ и не показывать запоздалый результат предыдущей компании. Учебная страница показывает этот способ работы. Для старого UI действует старый контракт `/api`; смешивать форматы `actions` и `recommendations`, `published` и `published_at`, Node relevance и Python score нельзя.
 

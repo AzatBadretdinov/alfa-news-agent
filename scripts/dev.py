@@ -30,7 +30,20 @@ def main():
     parser.add_argument("--native-providers", action="store_true", help="Run roles 2 and 3 as separate HTTP adapter processes")
     parser.add_argument("--learning", action="store_true", help="Enable human feedback and background ranker training")
     parser.add_argument("--context-db", help="Existing real company-context database, required for --learning")
+    parser.add_argument("--live", action="store_true", help="Enable external LLM only in the separate agent service")
+    parser.add_argument("--data-dir", help="Node news/research data directory (default: real data for --live)")
     args = parser.parse_args()
+    if args.live and args.smoke:
+        raise SystemExit("--live cannot be combined with --smoke: smoke must not spend LLM calls")
+    if args.context_db and not Path(args.context_db).is_file():
+        raise SystemExit("--context-db must point to an existing database")
+    if args.live:
+        if not args.context_db:
+            raise SystemExit("--live requires --context-db with real company profiles")
+        args.native_providers = True
+        subprocess.run(["node", "scripts/check_llm.mjs"], cwd=ROOT, check=True)
+        os.environ.setdefault("RANK_MODE", "news-analysis")
+        os.environ.setdefault("NEWS_MODULE_PATH", str(ROOT))
     if args.learning:
         if not args.context_db or not Path(args.context_db).is_file():
             raise SystemExit("--learning requires --context-db pointing to an existing company database")
@@ -43,7 +56,7 @@ def main():
     if not (ROOT / "dist/integration/index.js").is_file():
         raise SystemExit("Run npm run build first")
     processes, logs = [], []
-    workspace = persistent(temporary=args.smoke)
+    workspace = persistent(temporary=args.smoke, live=args.live)
     def stopping(*_):
         raise KeyboardInterrupt()
     signal.signal(signal.SIGTERM, stopping)
@@ -55,10 +68,11 @@ def main():
             mock_port = free_port() if args.smoke else int(os.environ.get("MOCK_PORT", "8102"))
             agent_port = free_port() if args.smoke else int(os.environ.get("AGENT_PORT", "8202"))
             env = {**os.environ, "HOST": "127.0.0.1", "LLM_MODE": "demo", "CONTEXT_MODE": "fixture",
-                   "CONTEXT_DB": str(directory / "context.sqlite3"), "DATA_DIR": str(node_fixture(directory / "node-data")),
+                   "CONTEXT_DB": str(directory / "context.sqlite3"),
+                   "DATA_DIR": str(Path(args.data_dir).resolve() if args.data_dir else ROOT / "data" if args.live else node_fixture(directory / "node-data")),
                    "DB_PATH": str(directory / "node.sqlite3"), "ML_URL": f"http://127.0.0.1:{ml_port}",
                    "RETRIEVAL_URL": f"http://127.0.0.1:{mock_port}", "AGENT_URL": f"http://127.0.0.1:{agent_port if args.native_providers else mock_port}"}
-            if args.learning:
+            if args.context_db:
                 env.update(CONTEXT_MODE="existing", CONTEXT_DB=str(Path(args.context_db).resolve()))
             # This runner intentionally uses fixtures/demo. Existing data and live models require explicit service commands.
             commands = [("ml", [sys.executable, "-m", "uvicorn", "integration.app:app", "--host", "127.0.0.1", "--port", str(ml_port)], {}),
@@ -68,7 +82,7 @@ def main():
                 env.update(RETRIEVAL_MODE="http", AGENT_MODE="http")
                 commands[1:2] = [
                     ("retrieval", ["node", "dist/integration/provider-server.js"], {"PORT": str(mock_port), "SERVICE_KIND": "retrieval", "DB_PATH": str(directory / "retrieval.sqlite3")}),
-                    ("agent", ["node", "dist/integration/provider-server.js"], {"PORT": str(agent_port), "SERVICE_KIND": "agent", "DB_PATH": str(directory / "agent.sqlite3")}),
+                    ("agent", ["node", "dist/integration/provider-server.js"], {"PORT": str(agent_port), "SERVICE_KIND": "agent", "LLM_MODE": "live" if args.live else "demo", "DB_PATH": str(directory / "agent.sqlite3")}),
                 ]
             for name, command, overrides in commands:
                 logfile = (directory / (name + ".log")).open("w+")
@@ -95,7 +109,7 @@ def main():
             if args.smoke:
                 smoke(base)
             else:
-                print(f"Open {base}/{'learning' if args.learning else 'integration'} | Ctrl+C stops all service processes", flush=True)
+                print(f"Open {base}/{'learning' if args.learning else 'analysis/'} | Ctrl+C stops all service processes", flush=True)
                 while all(p.poll() is None for p in processes):
                     time.sleep(0.5)
                 raise RuntimeError("A service exited; inspect var/integration/dev/*.log")
@@ -116,14 +130,15 @@ def main():
 
 
 class persistent:
-    def __init__(self, temporary=False):
+    def __init__(self, temporary=False, live=False):
         self.temporary = temporary
+        self.live = live
         self.path = None
     def __enter__(self):
         if self.temporary:
             self.path = Path(tempfile.mkdtemp(prefix="alfa-smoke-", dir=ROOT / "var" if (ROOT / "var").exists() else ROOT))
             return self.path
-        path = ROOT / "var/integration/dev"
+        path = ROOT / ("var/integration/live" if self.live else "var/integration/dev")
         path.mkdir(parents=True, exist_ok=True)
         return path
     def __exit__(self, *_):

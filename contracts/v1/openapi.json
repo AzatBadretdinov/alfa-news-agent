@@ -1521,6 +1521,308 @@
         }
       }
     },
+    "/v1/analysis-context": {
+      "post": {
+        "operationId": "PreparedContextData_post__v1_analysis-context",
+        "tags": [
+          "role-5"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Validated result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreparedContextDataResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisEventRequest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/analyze-event": {
+      "post": {
+        "operationId": "Analysis_post__v1_analyze-event",
+        "tags": [
+          "role-2"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Validated result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "504": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalysisEventRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/agent/analyze": {
       "post": {
         "operationId": "Analysis_post__v1_agent_analyze",
@@ -2860,7 +3162,12 @@
                   "INTERNAL_ERROR",
                   "PAYLOAD_TOO_LARGE",
                   "UNSUPPORTED_MEDIA_TYPE",
-                  "FORBIDDEN"
+                  "FORBIDDEN",
+                  "MODEL_AUTH_ERROR",
+                  "MODEL_LIMIT",
+                  "MODEL_TIMEOUT",
+                  "MODEL_UNAVAILABLE",
+                  "MODEL_RESPONSE_INVALID"
                 ]
               },
               "message": {
@@ -3664,6 +3971,27 @@
               "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
             },
             "minItems": 1
+          },
+          "profile_paths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^/",
+              "maxLength": 500
+            },
+            "minItems": 1,
+            "maxItems": 20,
+            "uniqueItems": true
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "minItems": 1,
+            "maxItems": 10
           }
         },
         "required": [
@@ -3671,6 +3999,203 @@
           "text",
           "quote",
           "source_ids"
+        ]
+      },
+      "Grounding": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "summary": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 29
+            },
+            "minItems": 1,
+            "maxItems": 30,
+            "uniqueItems": true
+          },
+          "why_relevant": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 29
+            },
+            "minItems": 1,
+            "maxItems": 30,
+            "uniqueItems": true
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 29
+              },
+              "minItems": 1,
+              "maxItems": 30,
+              "uniqueItems": true
+            },
+            "maxItems": 10
+          },
+          "opportunities": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 29
+              },
+              "minItems": 1,
+              "maxItems": 30,
+              "uniqueItems": true
+            },
+            "maxItems": 10
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "claim_indexes": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 29
+                  },
+                  "minItems": 1,
+                  "maxItems": 30,
+                  "uniqueItems": true
+                },
+                "condition": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "required_data": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000,
+                    "pattern": "\\S"
+                  },
+                  "maxItems": 10,
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "claim_indexes",
+                "condition",
+                "required_data"
+              ]
+            },
+            "maxItems": 10
+          }
+        },
+        "required": [
+          "summary",
+          "why_relevant",
+          "risks",
+          "opportunities",
+          "recommendations"
+        ]
+      },
+      "GeneratedAnalysis": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 6000,
+            "pattern": "\\S"
+          },
+          "why_relevant": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 6000,
+            "pattern": "\\S"
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Claim"
+            },
+            "minItems": 2,
+            "maxItems": 30
+          },
+          "risks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "maxItems": 10
+          },
+          "opportunities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "maxItems": 10
+          },
+          "recommendations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "maxItems": 10
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "maxItems": 20
+          },
+          "missing_data": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "maxItems": 20
+          },
+          "grounding": {
+            "$ref": "#/components/schemas/Grounding"
+          }
+        },
+        "required": [
+          "summary",
+          "why_relevant",
+          "claims",
+          "risks",
+          "opportunities",
+          "recommendations",
+          "limitations",
+          "missing_data",
+          "grounding"
         ]
       },
       "Trace": {
@@ -3774,6 +4299,19 @@
               "demo",
               "live"
             ]
+          },
+          "missing_data": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "maxItems": 20
+          },
+          "grounding": {
+            "$ref": "#/components/schemas/Grounding"
           }
         },
         "required": [
@@ -3791,6 +4329,23 @@
           "sources",
           "trace",
           "mode"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "mode": {
+                  "const": "live"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "grounding",
+                "missing_data"
+              ]
+            }
+          }
         ]
       },
       "AgentRequest": {
@@ -3838,6 +4393,71 @@
           "as_of",
           "audience_role",
           "is_mock"
+        ]
+      },
+      "AnalysisEventRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "company_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
+          },
+          "event": {
+            "$ref": "#/components/schemas/Event"
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+          },
+          "audience_role": {
+            "enum": [
+              "cfo",
+              "ceo",
+              "treasury"
+            ]
+          },
+          "expected_context_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "company_id",
+          "event",
+          "as_of",
+          "audience_role"
+        ]
+      },
+      "PreparedContextData": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "input": {
+            "$ref": "#/components/schemas/AgentRequest"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "minItems": 2
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "serialized_bytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "input",
+          "sources",
+          "sha256",
+          "serialized_bytes"
         ]
       },
       "QuestionRequest": {
@@ -3896,6 +4516,18 @@
               ]
             },
             "maxItems": 10
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:[0-5]\\d(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
+          },
+          "audience_role": {
+            "enum": [
+              "cfo",
+              "ceo",
+              "treasury"
+            ]
           }
         },
         "required": [
@@ -3928,6 +4560,45 @@
               "pattern": "^[A-Za-z0-9_:.\\-]{1,160}$"
             },
             "minItems": 1
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Claim"
+            },
+            "minItems": 2,
+            "maxItems": 30
+          },
+          "claim_indexes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 29
+            },
+            "minItems": 1,
+            "maxItems": 30,
+            "uniqueItems": true
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "maxItems": 20
+          },
+          "missing_data": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "maxItems": 20
           }
         },
         "required": [
@@ -3935,6 +4606,64 @@
           "company_id",
           "answer",
           "source_ids"
+        ]
+      },
+      "GeneratedAnswer": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "answer": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000,
+            "pattern": "\\S"
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Claim"
+            },
+            "minItems": 2,
+            "maxItems": 30
+          },
+          "claim_indexes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 29
+            },
+            "minItems": 1,
+            "maxItems": 30,
+            "uniqueItems": true
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "maxItems": 20
+          },
+          "missing_data": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "pattern": "\\S"
+            },
+            "maxItems": 20
+          }
+        },
+        "required": [
+          "answer",
+          "claims",
+          "claim_indexes",
+          "limitations",
+          "missing_data"
         ]
       },
       "CompaniesData": {
@@ -4150,6 +4879,22 @@
           },
           "data": {
             "$ref": "#/components/schemas/LearningStatusData"
+          }
+        },
+        "required": [
+          "meta",
+          "data"
+        ]
+      },
+      "PreparedContextDataResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "$ref": "#/components/schemas/Meta"
+          },
+          "data": {
+            "$ref": "#/components/schemas/PreparedContextData"
           }
         },
         "required": [
