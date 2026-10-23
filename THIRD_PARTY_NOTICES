@@ -1,0 +1,33 @@
+Third-party components, data, services and simulated integrations
+
+Runtime: Node.js 24.x, including its bundled components under their respective licenses.
+SQLite bundled with Node.js: public domain; https://www.sqlite.org/copyright.html
+Docker base: official node:24.13.0-bookworm-slim image; Debian components have their own licenses.
+
+Runtime packages: Express (MIT), csv-parse (MIT), fast-xml-parser (MIT).
+Development packages: TypeScript (Apache-2.0), tsx (MIT), DefinitelyTyped declarations (MIT).
+Exact direct and transitive dependencies are recorded in package-lock.json.
+License texts are supplied with the installed packages. Python is not used by the application.
+
+Data supplied by the hackathon organizers:
+df_Uid_data_hack.csv, df_Uid_payment_hack.csv, df_Fid_Uid_link_hack.csv.
+The gzip copies preserve the original CSV content. Dataset redistribution rights are not assumed.
+Source: https://drive.google.com/drive/folders/1Ep8wWoEHTg5Q8kwrLx2j_xFyxGUEVxFq
+
+Bank research: nine Alfa-Bank documents supplied with the case.
+research.json contains automatic OCR output, not an edited or endorsed bank publication.
+Copyright remains with the respective authors. Original PDFs are linked, not bundled locally.
+Source: https://drive.google.com/drive/folders/15xZTLF1lZ65p6o5xpNA_fRbxjoV-UlG1
+
+Historical OCR preparation used PyMuPDF 1.26.6 (AGPL-3.0 or commercial license),
+Tesseract OCR (Apache-2.0) and tessdata_fast Russian/English data (Apache-2.0).
+These tools and binaries are not bundled or required by the Node.js application.
+The old preprocessing utility is retained in the separate legacy backup.
+
+LLMs: only the six permitted IDs listed in server/config.ts. Models are called via the
+organizer gateway; no model weights are bundled. Live HTTP transport is implemented,
+and a first live test confirmed gateway access. After fixes, a live analysis with tools and follow-up Q&A passed on a synthetic scenario. Semantic correctness across real cases remains unverified.
+
+Simulated integrations: Alfa-Business UI shell, company selection without authentication,
+six synthetic seed news items, template analysis and Q&A in demo mode.
+No connection to a real internet-bank account, payment action, live banking API or identity provider.
