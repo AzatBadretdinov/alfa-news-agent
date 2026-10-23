@@ -11,6 +11,9 @@ import { ContractClient } from "../client.js";
 import { MockAgent, type AgentPort } from "../agent.js";
 import { MockRetrieval, type RetrievalPort } from "../retrieval.js";
 import { createGateway } from "../gateway.js";
+import { prepareContext } from "../context.js";
+import { referenceDraft } from "../evaluation.js";
+import { ModelError } from "../../types.js";
 
 const profile = JSON.parse(readFileSync(resolve(ROOT, "contracts/v1/examples/profile-response.json"), "utf8")).data;
 const asOf = "2026-10-23T00:00:00Z";
@@ -33,7 +36,7 @@ function mlClient(mutate?: (path: string, value: Json) => void) {
     return Response.json(value);
   }) as typeof fetch);
 }
-async function harness(options: { agent?: AgentPort; retrieval?: RetrievalPort; ml?: ContractClient; maxSessions?: number; ttlMs?: number } = {}) {
+async function harness(options: { agent?: AgentPort; retrieval?: RetrievalPort; ml?: ContractClient; maxSessions?: number; ttlMs?: number; maxContextBytes?: number } = {}) {
   const app = createGateway({ ml: options.ml ?? mlClient(), retrieval: new MockRetrieval(), agent: options.agent ?? new MockAgent(), ...options });
   const server = app.listen(0, "127.0.0.1");
   await new Promise<void>(resolve => server.once("listening", resolve));
@@ -209,5 +212,93 @@ test("learning gateway forwards only supplied reviewer token and validates feedb
     assert.deepEqual(seen, ["", "test-reviewer", "test-reviewer"]);
     assert.equal((await h.call("/v1/learning/feedback", { ...feedback, ratings: [{ ...feedback.ratings[0], source_reviewed: false }] })).status, 422);
     assert.equal((await fetch(h.base + "/learning")).status, 200);
+  } finally { await h.close(); }
+});
+
+test("preview has no agent calls; selected events and context hashes are enforced", async () => {
+  let calls = 0;
+  const mock = new MockAgent();
+  const agent: AgentPort = { answer: mock.answer.bind(mock), async analyze(input,id) { calls++; return mock.analyze(input,id); } };
+  const h = await harness({agent});
+  try {
+    const event = (await new MockRetrieval().search({query:"",as_of:asOf,limit:1},"test")).data.items[0];
+    const request = {company_id:"U_A",event,as_of:asOf,audience_role:"cfo"};
+    const preview = await h.call("/v1/analysis-context",request);
+    assert.equal(preview.status,200); assert.equal(calls,0); validate("PreparedContextDataResponse",preview.value);
+    assert.deepEqual(preview.value.data.input.event,event);
+    const stale = await h.call("/v1/analyze-event",{...request,expected_context_sha256:"0".repeat(64)});
+    assert.equal(stale.status,409); assert.equal(calls,0);
+    const result = await h.call("/v1/analyze-event",{...request,expected_context_sha256:preview.value.data.sha256});
+    assert.equal(result.status,200); assert.equal(calls,1); assert.equal(result.value.data.news_id,event.news_id);
+    const future = await h.call("/v1/analysis-context",{...request,as_of:"2020-01-01T00:00:00Z"}); assert.equal(future.status,422);
+  } finally { await h.close(); }
+});
+test("gateway repeats live grounding checks even if an agent claims the result is valid", async () => {
+  const mock = new MockAgent(); let tamper = false;
+  const agent: AgentPort = {answer:mock.answer.bind(mock), async analyze(input,id) {
+    const result = await mock.analyze(input,id);
+    Object.assign(result.data,referenceDraft({id:"test",input,expectations:[]}),{mode:"live",sources:prepareContext(input).sources});
+    if(tamper) result.data.claims[0].text = "Компания понесёт потери";
+    return result;
+  }};
+  const h = await harness({agent});
+  try { assert.equal((await h.call("/v1/analyze",body)).status,200); tamper = true;
+    const result = await h.call("/v1/analyze",body); assert.equal(result.status,502); assert.equal(result.value.error.code,"CONTRACT_VIOLATION");
+  } finally { await h.close(); }
+});
+test("analysis UI serves only static assets with CSP; sensitive files are unavailable", async () => {
+  const h = await harness();
+  try {
+    for(const path of ["/analysis/","/analysis/app.js","/analysis/styles.css","/analysis/state.js"]) {
+      const r = await fetch(h.base + path); assert.equal(r.status,200); assert.match(r.headers.get("content-security-policy")!,/script-src 'self'/);
+    }
+    for(const path of ["/analysis/.env","/analysis/server/config.ts","/analysis/%2e%2e/%2e%2e/.env"]) assert.equal((await fetch(h.base+path)).status,404);
+  } finally { await h.close(); }
+});
+
+test("live follow-ups retain analysis date, role and grounded company/source context", async () => {
+  const mock = new MockAgent(); let saved: Json, tamper = false;
+  const agent: AgentPort = { async analyze(input,id) {
+    saved = referenceDraft({id:"test",input,expectations:[]});
+    const value = await mock.analyze(input,id); Object.assign(value.data,saved,{mode:"live",sources:prepareContext(input).sources}); return value;
+  }, async answer(input,id) {
+    assert.equal(input.as_of,asOf); assert.equal(input.audience_role,"cfo");
+    const claims = structuredClone(saved.claims); if(tamper) claims[0].quote = "Источник этого не говорил";
+    return envelope({analysis_id:input.analysis.id,company_id:input.company_id,answer:saved.summary + " " + saved.why_relevant,
+      claims,claim_indexes:[0,1],limitations:saved.limitations,missing_data:saved.missing_data,
+      source_ids:[...new Set(claims.flatMap((c: Json) => c.source_ids))]},id,"live");
+  }};
+  const h = await harness({agent});
+  try { const a = await h.call("/v1/analyze",body); assert.equal(a.status,200);
+    const path = `/v1/analyses/${a.value.data.id}/questions`;
+    assert.equal((await h.call(path,{company_id:"U_A",question:"Что уточнить?"})).status,200);
+    tamper = true; const bad = await h.call(path,{company_id:"U_A",question:"А затем?"}); assert.equal(bad.status,502);
+  } finally { await h.close(); }
+});
+test("model error types reach the UI without turning into generic validation failures", async () => {
+  const mock = new MockAgent();
+  const agent: AgentPort = {answer:mock.answer.bind(mock),async analyze() {throw new ModelError("Лимит исчерпан","MODEL_LIMIT",429);}};
+  const h = await harness({agent});
+  try { const r = await h.call("/v1/analyze",body); assert.equal(r.status,429); assert.equal(r.value.error.code,"MODEL_LIMIT"); assert.equal(r.value.error.retryable,true); }
+  finally { await h.close(); }
+});
+test("a pending analysis reserves its session slot before a second request can spend a call", async () => {
+  let started!: () => void, release!: () => void, calls = 0;
+  const ready = new Promise<void>(resolve => { started = resolve; }), gate = new Promise<void>(resolve => { release = resolve; });
+  const mock = new MockAgent(), agent: AgentPort = {answer:mock.answer.bind(mock),async analyze(input,id) {
+    calls++; started(); await gate; return mock.analyze(input,id);
+  }};
+  const h = await harness({agent,maxSessions:1});
+  try { const first = h.call("/v1/analyze",body); await ready;
+    assert.equal((await h.call("/v1/analyze",body)).status,429); assert.equal(calls,1);
+    release(); assert.equal((await first).status,200);
+  } finally { release(); await h.close(); }
+});
+test("preview applies the configured context limit before calling an agent", async () => {
+  const h = await harness({maxContextBytes:1000});
+  try {
+    const event = (await new MockRetrieval().search({query:"",as_of:asOf,limit:1},"test")).data.items[0];
+    const result = await h.call("/v1/analysis-context",{company_id:"U_A",event,as_of:asOf,audience_role:"cfo"});
+    assert.equal(result.status,422); assert.equal(result.value.error.code,"VALIDATION_ERROR");
   } finally { await h.close(); }
 });
