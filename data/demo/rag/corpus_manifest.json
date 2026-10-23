@@ -1,0 +1,77 @@
+{
+  "_note": "Манифест корпуса аналитики ЦМИ Альфа-Банка (из data/research.json). Даты выведены из первой страницы каждого документа; подтвердить при необходимости.",
+  "documents": [
+    {
+      "filename": "ALFA-7M26.pdf",
+      "document_id": "1HZDq3WGRFdzgm1TZ5hWL23Q3I9c2Eq64",
+      "title": "Макростатистика 7М26",
+      "pages": 4,
+      "url": "https://drive.google.com/file/d/1HZDq3WGRFdzgm1TZ5hWL23Q3I9c2Eq64/view",
+      "date": "2026-09-07"
+    },
+    {
+      "filename": "ALFA-Macro_Insights-Policy_Rate_11Sep.pdf",
+      "document_id": "1shHG89LtMgHT1_uEebHmQSFZe_zbeq7-",
+      "title": "Ключевая ставка: 11 сентября",
+      "pages": 4,
+      "url": "https://drive.google.com/file/d/1shHG89LtMgHT1_uEebHmQSFZe_zbeq7-/view",
+      "date": "2026-09-11"
+    },
+    {
+      "filename": "ALFA-consumption.pdf",
+      "document_id": "1riR1lhsb6EY1MwGMxdBlS_tI5ed9mIiz",
+      "title": "Потребление на пике",
+      "pages": 4,
+      "url": "https://drive.google.com/file/d/1riR1lhsb6EY1MwGMxdBlS_tI5ed9mIiz/view",
+      "date": "2026-08-05"
+    },
+    {
+      "filename": "ALFA-macro_stat1H26.pdf",
+      "document_id": "1khcHwoS0FkG9p_0J4XoHGaGq3B4V0ime",
+      "title": "Макростатистика 1П26",
+      "pages": 5,
+      "url": "https://drive.google.com/file/d/1khcHwoS0FkG9p_0J4XoHGaGq3B4V0ime/view",
+      "date": "2026-07-31"
+    },
+    {
+      "filename": "ALFA_Russian_Steels_1К21PreviewUpdate_15Apr2021.pdf",
+      "document_id": "1yLCBrIoyIsubLTEBvBHh6io48ysnW-wn",
+      "title": "Российская металлургия: обзор",
+      "pages": 4,
+      "url": "https://drive.google.com/file/d/1yLCBrIoyIsubLTEBvBHh6io48ysnW-wn/view",
+      "date": "2021-04-15"
+    },
+    {
+      "filename": "FI_Strategy_3Q26_22072026.pdf",
+      "document_id": "1hq3Fhyz9ce_sRyGUQB1MdoHeQdfAJfhK",
+      "title": "Тактический взгляд на III квартал 2026",
+      "pages": 27,
+      "url": "https://drive.google.com/file/d/1hq3Fhyz9ce_sRyGUQB1MdoHeQdfAJfhK/view",
+      "date": "2026-07-22"
+    },
+    {
+      "filename": "Gold_digest_August26.pdf",
+      "document_id": "1a7TXOCHARfKzUR0hn9Cm9gQSrIldxTDE",
+      "title": "Обзор рынка золота: август",
+      "pages": 8,
+      "url": "https://drive.google.com/file/d/1a7TXOCHARfKzUR0hn9Cm9gQSrIldxTDE/view",
+      "date": "2026-08-01"
+    },
+    {
+      "filename": "Inflation_tracker_02.pdf",
+      "document_id": "19iW3Ph8_wO0HHQY7Ik4lTfC3jRc9gjWV",
+      "title": "Инфляция: основные выводы",
+      "pages": 3,
+      "url": "https://drive.google.com/file/d/19iW3Ph8_wO0HHQY7Ik4lTfC3jRc9gjWV/view",
+      "date": "2026-09-02"
+    },
+    {
+      "filename": "Бонд_Бриф_14092026.pdf",
+      "document_id": "1bPzix_332N2CyMY0tqCHuYtGsfJWnFGv",
+      "title": "Бонд Бриф: 14 сентября",
+      "pages": 5,
+      "url": "https://drive.google.com/file/d/1bPzix_332N2CyMY0tqCHuYtGsfJWnFGv/view",
+      "date": "2026-09-14"
+    }
+  ]
+}
