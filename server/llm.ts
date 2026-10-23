@@ -17,15 +17,18 @@ export function parseJson(message: Json): Json {
 }
 export function createComplete(settings: Settings, db: Store, request: typeof fetch = fetch): Complete {
   return async (messages, tools, jsonMode = false) => {
-    if (!settings.apiKey) throw new ModelError("Нет LLM_API_KEY. Укажите ключ в .env и перезапустите сервер.");
-    if (new URL(settings.baseUrl).protocol !== "https:") throw new ModelError("Для внешнего API требуется HTTPS.");
+    if (!settings.apiKey.trim()) throw new ModelError("Нет LLM_API_KEY. Укажите ключ в .env и перезапустите сервер.", "MODEL_AUTH_ERROR");
+    let base: URL;
+    try { base = new URL(settings.baseUrl); } catch { throw new ModelError("Некорректный адрес LLM API."); }
+    if (base.protocol !== "https:" || base.username || base.password || base.search || base.hash)
+      throw new ModelError("Для API нужен HTTPS-адрес без учётных данных и параметров.");
     const day = new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10);
     // No await inside the reservation: parallel jobs cannot overspend the local count limit.
     db.connection.exec("BEGIN IMMEDIATE");
     let callId: number | bigint;
     try {
       if (db.get("SELECT count(*) n FROM llm_calls WHERE day=?", day)!.n >= settings.maxCalls)
-        throw new ModelError("Достигнут локальный лимит вызовов модели за день (сброс в 00:00 МСК).");
+        throw new ModelError("Достигнут локальный лимит вызовов модели за день (сброс в 00:00 МСК).", "MODEL_LIMIT", 429);
       callId = db.run("INSERT INTO llm_calls(day,model) VALUES(?,?)", day, settings.model).lastInsertRowid;
       db.connection.exec("COMMIT");
     } catch (error) {
@@ -56,18 +59,34 @@ export function createComplete(settings: Settings, db: Store, request: typeof fe
         const errors: Record<number, string> = {
           401: "Ключ отклонён API.",
           403: "У ключа нет доступа.",
-          429: "Лимит API или общий бюджет исчерпан. Сброс бюджета организаторов — в 03:00 МСК.",
+          429: "Лимит API или общий бюджет исчерпан.",
         };
-        throw new ModelError(errors[response.status] ?? "API модели вернул HTTP " + response.status + ".");
+        throw new ModelError(errors[response.status] ?? "API модели вернул HTTP " + response.status + ".",
+          [401, 403].includes(response.status) ? "MODEL_AUTH_ERROR" : response.status === 429 ? "MODEL_LIMIT" : response.status >= 500 ? "MODEL_UNAVAILABLE" : "MODEL_RESPONSE_INVALID",
+          response.status === 429 ? 429 : response.status >= 500 ? 503 : 502);
       }
-      const result: Json = await response.json();
+      const reader = response.body?.getReader();
+      if (!reader) throw new ModelError("Пустой ответ API модели.");
+      const chunks: Uint8Array[] = []; let size = 0;
+      try {
+        while (true) {
+          const { done, value } = await reader.read(); if (done) break;
+          size += value.byteLength;
+          if (size > (settings.maxResponseBytes ?? 1000000)) throw new ModelError("Ответ API превышает лимит размера.");
+          chunks.push(value);
+        }
+      } finally { await reader.cancel(); }
+      const result: Json = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+      if (!result || typeof result !== "object" || !Array.isArray(result.choices) || !result.choices.length)
+        throw new ModelError("API модели вернул неожиданный формат ответа.");
       const choice = result.choices?.[0];
       const message = choice?.message;
-      if (!message || typeof message !== "object") throw new ModelError("API модели вернул неожиданный формат ответа.");
+      if (!message || typeof message !== "object" || Array.isArray(message)) throw new ModelError("API модели вернул неожиданный формат ответа.");
+      const tokens = (v: unknown) => Number.isSafeInteger(v) && (v as number) >= 0 ? v as number : 0;
       db.run(
         "UPDATE llm_calls SET prompt_tokens=?,completion_tokens=? WHERE id=?",
-        Number(result.usage?.prompt_tokens) || 0,
-        Number(result.usage?.completion_tokens) || 0,
+        tokens(result.usage?.prompt_tokens),
+        tokens(result.usage?.completion_tokens),
         callId,
       );
       // Token usage is recorded even when the provider truncates the answer.
@@ -79,6 +98,8 @@ export function createComplete(settings: Settings, db: Store, request: typeof fe
             : "Ответ модели при выборе инструментов обрезан по лимиту длины. Увеличьте LLM_MAX_PLANNING_TOKENS, сократите контекст или смените модель.",
         );
       }
+      if (message.refusal || choice.finish_reason === "content_filter") throw new ModelError("Модель отказалась сформировать ответ.");
+      if (jsonMode && typeof message.content !== "string") throw new ModelError("API модели не вернул текст JSON.");
       return message;
     } catch (error) {
       if (error instanceof ModelError) throw error;
@@ -87,7 +108,7 @@ export function createComplete(settings: Settings, db: Store, request: typeof fe
         throw new ModelError(
           "Истекло время ожидания API модели (" +
             settings.timeout / 1000 +
-            " с). Увеличьте LLM_TIMEOUT_SECONDS или повторите запрос.",
+            " с). Увеличьте LLM_TIMEOUT_SECONDS или повторите запрос.", "MODEL_TIMEOUT", 504,
         );
       }
       if (error instanceof SyntaxError) throw new ModelError("API модели вернул некорректный JSON.");
@@ -95,7 +116,7 @@ export function createComplete(settings: Settings, db: Store, request: typeof fe
       const allowedCodes = ["ENOTFOUND", "ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_SOCKET"];
       throw new ModelError(
         "Не удалось получить ответ API модели. Проверьте соединение и адрес API." +
-          (code && allowedCodes.includes(code) ? " Код: " + code + "." : ""),
+          (code && allowedCodes.includes(code) ? " Код: " + code + "." : ""), "MODEL_UNAVAILABLE", 503,
       );
     }
   };

@@ -28,6 +28,8 @@ export interface Settings {
   maxOutputTokens: number;
   maxPlanningTokens: number;
   timeout: number;
+  maxContextBytes?: number;
+  maxResponseBytes?: number;
   host: string;
   port: number;
   feeds: string[];
@@ -58,7 +60,8 @@ export function loadSettings(env: NodeJS.ProcessEnv = process.env): Settings {
   const model = values.LLM_MODEL ?? "qwen/qwen3.6-35b-a3b";
   if (mode !== "demo" && mode !== "live")
     throw new Error("LLM_MODE должен быть demo или live");
-  if (!MODELS.includes(model))
+  const allowed: unknown = JSON.parse(values.LLM_ALLOWED_MODELS_JSON ?? JSON.stringify(MODELS));
+  if (!Array.isArray(allowed) || !allowed.every(m => typeof m === "string" && m.trim()) || !allowed.includes(model))
     throw new Error("Модель отсутствует в списке разрешённых");
 
   const feeds: unknown = JSON.parse(values.NEWS_FEEDS_JSON ?? "[]");
@@ -84,6 +87,8 @@ export function loadSettings(env: NodeJS.ProcessEnv = process.env): Settings {
     maxOutputTokens: integer(values.LLM_MAX_OUTPUT_TOKENS, 6000, 256),
     maxPlanningTokens: integer(values.LLM_MAX_PLANNING_TOKENS, 6000, 256),
     timeout: integer(values.LLM_TIMEOUT_SECONDS, 120, 1) * 1000,
+    maxContextBytes: integer(values.LLM_MAX_CONTEXT_BYTES, 200000, 1000),
+    maxResponseBytes: integer(values.LLM_MAX_RESPONSE_BYTES, 1000000, 1000),
     host: values.HOST ?? "127.0.0.1",
     port: integer(values.PORT, 8000),
     feeds,
