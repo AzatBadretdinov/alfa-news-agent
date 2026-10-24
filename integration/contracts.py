@@ -4,7 +4,7 @@ from datetime import datetime
 from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA = json.loads((ROOT / "contracts/v1/schema.json").read_text())
+SCHEMA = json.loads((ROOT / "contracts/v1/schema.json").read_text(encoding="utf-8"))
 FORMATS = FormatChecker()
 
 

@@ -42,6 +42,20 @@ def test_profile_does_not_invent_units_or_false_values(client):
     assert unknown["foreign_trade"]["has_fts"] is None
 
 
+def test_profile_payment_environment_matches_shared_contract(client):
+    response = client.get("/v1/companies/U_A")
+    assert response.status_code == 200
+    profile = validate("ProfileResponse", response.json())["data"]
+    context = profile["payment_summary"]["counterparty_context"]
+    assert context["available"] is True
+    assert context["out"]["coverage"]["company_card"]["known_share"] == 0.3
+    assert context["out"]["group_distribution"]["same_group"]["amount"] == 0.3
+    assert profile["provenance"]["signal_method"] == "deterministic_rules_v2"
+    # Missing source metadata must not be hidden by renormalizing to known cards.
+    unknown = next(row for row in context["out"]["industry_distribution"] if row["okved_division"] is None)
+    assert unknown["share_of_direction"] == 0.7
+
+
 def test_rank_is_personalized_and_preserves_score_kind(client):
     body = rank_request()
     a = client.post("/v1/rank", json=body)

@@ -8,6 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from .build import SCHEMA_VERSION
+from .exposure import payment_environment
 from .io import PRODUCTS, REVENUE_MULTIPLIERS, flag, number, numeric, sector
 from .signals import relevance_signals
 
@@ -137,6 +138,7 @@ class ContextStore:
             "outgoing_count": counts["out"] if available else None,
             "counterparty_directions_total": len(edges), "counterparties_truncated": len(edges) > top_n,
             "concentration": concentration, "currency": None, "period": None,
+            "counterparty_context": payment_environment(self.connection, uid, edges, totals, available),
             "limitation": "Только наблюдаемые платежи; валюта, период и договорные роли не заданы.",
         }
 
@@ -232,7 +234,7 @@ class ContextStore:
                            "company_raw_fields": row, "sources": self.metadata["sources"],
                            "snapshot_built_at": self.metadata["built_at"],
                            "record_numbering": "logical CSV records, header=1",
-                           "signal_method": "deterministic_rules_v1",
+                           "signal_method": "deterministic_rules_v2",
                            "weight_meaning": "эвристический приоритет темы; не вероятность и не оценка ущерба"},
         }
         profile["relevance_signals"] = relevance_signals(profile)

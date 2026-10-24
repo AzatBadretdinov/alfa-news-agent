@@ -102,7 +102,9 @@ def csv_rows(path, required):
         sample = stream.read(65536)
         stream.seek(0)
         try:
-            dialect = csv.Sniffer().sniff(sample, delimiters=";,\t")
+            # Sniffer can fail on short Windows CSVs with quoted delimiters.
+            # Normalize only its sample; preserve the original stream for parsing.
+            dialect = csv.Sniffer().sniff(sample.replace("\r\n", "\n").replace("\r", "\n"), delimiters=";,\t")
         except csv.Error:
             dialect = csv.excel
         reader = csv.DictReader(stream, dialect=dialect)

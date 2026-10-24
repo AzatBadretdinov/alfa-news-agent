@@ -22,7 +22,7 @@ def array(items, **kwargs):
 
 
 def generate():
-    profile = json.loads((ROOT / "company_context/profile.schema.json").read_text())
+    profile = json.loads((ROOT / "company_context/profile.schema.json").read_text(encoding="utf-8"))
     profile.pop("$id", None)
     profile.pop("$schema", None)
     d = {"Profile": profile}
@@ -185,8 +185,8 @@ if __name__ == "__main__":
         path = ROOT / "contracts/v1" / name
         content = json.dumps(value, ensure_ascii=False, indent=2) + "\n"
         if args.check:
-            if not path.exists() or path.read_text() != content:
+            if not path.exists() or path.read_text(encoding="utf-8") != content:
                 raise SystemExit(f"Stale generated contract: {path}; run python scripts/build_contracts.py")
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(content)
+            path.write_text(content, encoding="utf-8")
