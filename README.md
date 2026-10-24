@@ -64,13 +64,13 @@ python scripts/dev.py --live --context-db var/learning/context.sqlite3
 |---|---|---|
 | `company_context/` | CSV → SQLite, профиль компании, платёжные связи, provenance и неизвестные значения | [Профиль](company_context/README.md) |
 | `news_analysis/` | Признаки, граф, baseline/ML ranker, условные сценарии, подготовка датасетов | [Python API и CLI](news_analysis/README.md) |
-| `server/`, `frontend/` | Node-прототип: агент, RSS, лексический поиск, legacy `/api`; live-генерация в адаптере | [Архитектура прототипа](docs/ARCHITECTURE.md), [LLM](docs/integration/LIVE_LLM.md) |
+| `server/`, `frontend/` | Node-прототип: агент, RSS, лексический поиск, legacy `/api`; live-генерация в адаптере | [Архитектура прототипа](docs/architecture/ARCHITECTURE.md), [LLM](docs/integration/LIVE_LLM.md) |
 | `integration/`, `server/integration/` | Python/Node `/v1`, адаптеры, HTTP-клиенты, моки, SDK и общий запуск | [Архитектура интеграции](docs/integration/ARCHITECTURE.md) |
 | `contracts/v1/` | JSON Schema 2020-12, OpenAPI 3.1, примеры | [Контракты](docs/integration/CONTRACTS.md) |
 | `integration/analysis_ui/` | Новый UI через `/v1`: выбор компании/новости, источники, условия и вопросы | [Интерфейс и оценка](docs/integration/LLM_EVALUATION_UI.md) |
 | `data/training_v1/`, `data/training_v2/` | Датасеты, источники, ревью и ограничения AI-разметки | [v1](data/training_v1/README.md), [v2](data/training_v2/README.md) |
 | `tests/`, `server/**/tests/` | Unit-, контрактные и интеграционные проверки | [Проверка объединения](docs/integration/MERGE_TO_MASTER.md) |
-| `data/demo/` | Демо-набор: компании, новости, разметка, привязка к аналитике банка | [Демо-компании](docs/DEMO_COMPANIES.md) |
+| `data/demo/` | Демо-набор: компании, новости, разметка, привязка к аналитике банка | [Демо-компании](docs/guides/DEMO_COMPANIES.md) |
 | `docs/INDEX.md` | Карта проекта: навигация, проверки, критерии ТЗ | [Карта](docs/INDEX.md) |
 | `docs/ARCHITECTURE_OVERVIEW.md`, `docs/DECISIONS.md` | Единая схема гибрида Python+Node; решения команды | — |
 | `docs/SECURITY.md`, `docs/MONITORING.md`, `docs/SCALABILITY.md` | Безопасность AI, мониторинг качества (№12), масштабирование (№7) | — |
