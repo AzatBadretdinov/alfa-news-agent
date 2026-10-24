@@ -1,5 +1,5 @@
 {
-  "_note": "Пример журнала использования LLM. Реальные числа взяты из docs/NODE_MIGRATION.md (live-прогоны 22-23 окт). Каждая запись — один вызов модели через шлюз.",
+  "_note": "Пример журнала использования LLM. Реальные числа взяты из docs/archive/NODE_MIGRATION.md (live-прогоны 22-23 окт). Каждая запись — один вызов модели через шлюз.",
   "calls": [
     {"timestamp": "2026-10-22T09:10:00Z", "model": "qwen/qwen3.6-35b-a3b", "input_tokens": 1408,  "output_tokens": 2523, "job": "050d2f40"},
     {"timestamp": "2026-10-22T09:11:00Z", "model": "qwen/qwen3.6-35b-a3b", "input_tokens": 5927,  "output_tokens": 1212, "job": "050d2f40"},

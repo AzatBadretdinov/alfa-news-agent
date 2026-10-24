@@ -1,6 +1,6 @@
 # Перенос на Node.js — результат проверки
 
-> Исторический отчёт о Node-прототипе. Текущая интеграционная ветка сохраняет Python и Node.js через HTTP; актуальное решение — [integration/ARCHITECTURE.md](integration/ARCHITECTURE.md). Указания ниже не требуют удаления Python-модулей.
+> Исторический отчёт о Node-прототипе. Текущая интеграционная ветка сохраняет Python и Node.js через HTTP; актуальное решение — [integration/ARCHITECTURE.md](../integration/ARCHITECTURE.md). Указания ниже не требуют удаления Python-модулей.
 
 Дата: 22 октября 2026. Рабочая папка: D:\Develop\study\hackathon\alfa-insight-v1.
 

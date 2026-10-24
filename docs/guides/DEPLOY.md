@@ -7,7 +7,7 @@
 Корневой `Dockerfile` собирает self-contained Node-сервис: продуктовый UI + legacy `/api`, порт 8000, режим demo (без ключа) или live.
 
 ### Render.com (есть готовый блупринт)
-1. New + → Blueprint → указать репозиторий. Render прочитает [`deploy/render.yaml`](render.yaml).
+1. New + → Blueprint → указать репозиторий. Render прочитает [`deploy/render.yaml`](../../deploy/render.yaml).
 2. Для live-режима задать секрет `LLM_API_KEY` в UI (не в репозитории) и `LLM_MODE=live`. По умолчанию — `demo` (без ключа и без расхода бюджета).
 3. Health-check: `/api/health`.
 
